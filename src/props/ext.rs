@@ -8,7 +8,7 @@ use bevy_ecs::{
 };
 use estr::Estr;
 
-use super::{Props, Value};
+use super::{EntityProps, GlobalProps, Props, Value};
 
 // -----------------------------------------------------------------------------
 // Immutable properties access
@@ -17,6 +17,9 @@ static EMPTY_PROPS: LazyLock<Props> = LazyLock::new(Props::new);
 
 /// Adds [`Props`] access to [`World`], [`DeferredWorld`], [`EntityRef`], and
 /// [`EntityWorldMut`].
+///
+/// The world implementations read the [`GlobalProps`] resource, and the
+/// entity implementations read the [`EntityProps`] component.
 pub trait PropsExt {
     /// Returns a read-only set of properties assoceated with this object.
     fn props(&self) -> &Props;
@@ -34,8 +37,8 @@ pub trait PropsExt {
 
 impl PropsExt for World {
     fn props(&self) -> &Props {
-        match self.get_resource::<Props>() {
-            Some(p) => p,
+        match self.get_resource::<GlobalProps>() {
+            Some(p) => &p.0,
             None => &EMPTY_PROPS,
         }
     }
@@ -43,8 +46,8 @@ impl PropsExt for World {
 
 impl<'w> PropsExt for DeferredWorld<'w> {
     fn props(&self) -> &Props {
-        match self.get_resource::<Props>() {
-            Some(p) => p,
+        match self.get_resource::<GlobalProps>() {
+            Some(p) => &p.0,
             None => &EMPTY_PROPS,
         }
     }
@@ -52,8 +55,8 @@ impl<'w> PropsExt for DeferredWorld<'w> {
 
 impl<'w> PropsExt for EntityRef<'w> {
     fn props(&self) -> &Props {
-        match self.get::<Props>() {
-            Some(p) => p,
+        match self.get::<EntityProps>() {
+            Some(p) => &p.0,
             None => &EMPTY_PROPS,
         }
     }
@@ -61,8 +64,8 @@ impl<'w> PropsExt for EntityRef<'w> {
 
 impl<'w> PropsExt for EntityWorldMut<'w> {
     fn props(&self) -> &Props {
-        match self.get::<Props>() {
-            Some(p) => p,
+        match self.get::<EntityProps>() {
+            Some(p) => &p.0,
             None => &EMPTY_PROPS,
         }
     }
@@ -72,6 +75,9 @@ impl<'w> PropsExt for EntityWorldMut<'w> {
 // Mutable properties access
 
 /// Adds mutable [`Props`] access to [`World`] and [`EntityWorldMut`].
+///
+/// The [`GlobalProps`] resource or [`EntityProps`] component is inserted
+/// automatically if not already present.
 pub trait PropsMutExt {
     /// Provides mutable access to the set of properties assoceated with this object.
     fn props_mut(&mut self) -> &mut Props;
@@ -89,13 +95,18 @@ pub trait PropsMutExt {
 
 impl PropsMutExt for World {
     fn props_mut(&mut self) -> &mut Props {
-        self.get_resource_or_init::<Props>().into_inner()
+        &mut self.get_resource_or_init::<GlobalProps>().into_inner().0
     }
 }
 
 impl<'w> PropsMutExt for EntityWorldMut<'w> {
     fn props_mut(&mut self) -> &mut Props {
-        self.entry::<Props>().or_default().into_mut().into_inner()
+        &mut self
+            .entry::<EntityProps>()
+            .or_default()
+            .into_mut()
+            .into_inner()
+            .0
     }
 }
 

@@ -82,7 +82,6 @@ use std::fmt;
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign};
 use std::sync::LazyLock;
 
-use bevy_ecs::component::Component;
 use bevy_ecs::resource::Resource;
 use estr::Estr;
 
@@ -786,7 +785,8 @@ impl DivAssign<Value> for Value {
 /// When accessing a property, if a value has not been set or has the wrong
 /// type, the property should be treated as if it has the default value of the
 /// correct type. For example, toggling a
-#[derive(Component, Resource, Default, Clone, Debug)]
+/// TODO: This used to work with both component and resource, need to find out if just Resource breaks something.
+#[derive(Resource, Default, Clone, Debug)]
 pub struct Props {
     properties: BTreeMap<Estr, Value>,
 }

@@ -17,25 +17,25 @@ fn test_app() -> App {
     app
 }
 
-/// `EntityProps` is `Default + Clone`, so it qualifies as a pass-through
+/// `Props` is `Default + Clone`, so it qualifies as a pass-through
 /// [`bevy_ecs::template::Template`] without any extra derives.
 #[test]
-fn entity_props_spawns_with_defaults() {
+fn props_spawn_with_defaults() {
     let mut app = test_app();
     let world = app.world_mut();
-    let entity = world.spawn_scene(bsn! { EntityProps }).unwrap().id();
+    let entity = world.spawn_scene(bsn! { Props }).unwrap().id();
 
-    assert!(world.entity(entity).contains::<EntityProps>());
+    assert!(world.entity(entity).contains::<Props>());
     assert_eq!(world.entity(entity).props().iter().count(), 0);
 }
 
 #[test]
-fn entity_props_accepts_expressions() {
+fn props_accept_expressions() {
     let mut app = test_app();
     let world = app.world_mut();
     let entity = world
         .spawn_scene(bsn! {
-            EntityProps({Props::new().with("health", 100.0).with("name", "frodo")})
+            template_value(Props::new().with("health", 100.0).with("name", "frodo"))
         })
         .unwrap()
         .id();
@@ -45,14 +45,14 @@ fn entity_props_accepts_expressions() {
 }
 
 #[test]
-fn entity_props_work_in_scene_hierarchies() {
+fn props_work_in_scene_hierarchies() {
     let mut app = test_app();
     let world = app.world_mut();
     let root = world
         .spawn_scene(bsn! {
-            EntityProps({Props::new().with("depth", 0.0)})
+            template_value(Props::new().with("depth", 0.0))
             Children [
-                EntityProps({Props::new().with("depth", 1.0)})
+                template_value(Props::new().with("depth", 1.0))
             ]
         })
         .unwrap()
@@ -63,12 +63,12 @@ fn entity_props_work_in_scene_hierarchies() {
     assert_eq!(world.entity(child).get_prop::<f32>("depth"), 1.0);
 }
 
-/// When scenes are composed, a later `EntityProps` patch replaces the whole
+/// When scenes are composed, a later `Props` patch replaces the whole
 /// property map; props from the base scene are not merged key-by-key.
 #[test]
 fn composed_scenes_replace_props_wholesale() {
     fn base() -> impl Scene {
-        bsn! { EntityProps({Props::new().with("health", 100.0)}) }
+        bsn! { template_value(Props::new().with("health", 100.0)) }
     }
 
     let mut app = test_app();
@@ -76,7 +76,7 @@ fn composed_scenes_replace_props_wholesale() {
     let entity = world
         .spawn_scene(bsn! {
             base()
-            EntityProps({Props::new().with("mana", 50.0)})
+            template_value(Props::new().with("mana", 50.0))
         })
         .unwrap()
         .id();

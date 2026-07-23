@@ -1,8 +1,8 @@
 //! Adds named properties to entities.
 //!
 //! This module is all about the [`Props`] type; you can think of this as being
-//! basically a mapping `String => bool | f32 | String`. Props can be attached
-//! to individual entities with the [`EntityProps`] component, or stored
+//! basically a mapping `String => bool | f32 | String`. Props is itself a
+//! component, so it can be attached directly to individual entities, or stored
 //! world-wide with the [`GlobalProps`] resource.
 //!
 //! ```rust
@@ -46,7 +46,7 @@
 //! # Extension Traits
 //!
 //! Props can be set globally (by using the [`GlobalProps`] resource) or on
-//! specific entities (by using the [`EntityProps`] component). A number of
+//! specific entities (by using [`Props`] as a component). A number of
 //! extension traits are available to allow props to be modified from the
 //! world, entity refs, or commands
 //!
@@ -65,7 +65,7 @@
 //!     foo(thingy);
 //! }
 //!
-//! fn local_props_component_system(props: Single<&EntityProps>) {
+//! fn local_props_component_system(props: Single<&Props>) {
 //!     let thingy = props.get("thingy");
 //!     foo(thingy);
 //! }
@@ -783,15 +783,25 @@ impl DivAssign<Value> for Value {
 /// A simple key-value property store.
 ///
 /// Properties have string keys and either boolean, numeric, or string
-/// values. To store props in the ECS, wrap them in the [`EntityProps`]
-/// component or the [`GlobalProps`] resource. It is often more convenient to
-/// work through the extension traits [`PropsExt`], [`PropsMutExt`], and
-/// [`PropCommandsExt`].
+/// values. `Props` is a component, so it can be attached directly to
+/// entities; to store props world-wide, wrap them in the [`GlobalProps`]
+/// resource. It is often more convenient to work through the extension
+/// traits [`PropsExt`], [`PropsMutExt`], and [`PropCommandsExt`].
 ///
 /// When accessing a property, if a value has not been set or has the wrong
 /// type, the property should be treated as if it has the default value of the
 /// correct type.
-#[derive(Default, Clone, Debug)]
+///
+/// ```rust
+/// # use bevy_ecs::prelude::*;
+/// # use bevy_mod_props::prelude::*;
+/// # let mut world = World::new();
+/// let entity = world
+///     .spawn(Props::new().with("health", 100.0))
+///     .id();
+/// assert_eq!(world.entity(entity).get_prop::<f32>("health"), 100.0);
+/// ```
+#[derive(Component, Default, Clone, Debug)]
 pub struct Props {
     properties: BTreeMap<Estr, Value>,
 }
@@ -913,55 +923,13 @@ impl IntoIterator for Props {
 // -----------------------------------------------------------------------------
 // ECS Wrappers
 
-/// [`Props`] attached to a single entity, as a component.
-///
-/// Bevy requires components and resources to be distinct types, so this and
-/// [`GlobalProps`] wrap [`Props`] for each role. Both dereference to
-/// [`Props`], and are usually accessed through the extension traits
-/// [`PropsExt`], [`PropsMutExt`], and [`PropCommandsExt`] rather than
-/// directly.
-///
-/// ```rust
-/// # use bevy_ecs::prelude::*;
-/// # use bevy_mod_props::prelude::*;
-/// # let mut world = World::new();
-/// let entity = world
-///     .spawn(EntityProps(Props::new().with("health", 100.0)))
-///     .id();
-/// assert_eq!(world.entity(entity).get_prop::<f32>("health"), 100.0);
-/// ```
-#[derive(Component, Default, Clone, Debug)]
-pub struct EntityProps(pub Props);
-
-impl Deref for EntityProps {
-    type Target = Props;
-
-    fn deref(&self) -> &Props {
-        &self.0
-    }
-}
-
-impl DerefMut for EntityProps {
-    fn deref_mut(&mut self) -> &mut Props {
-        &mut self.0
-    }
-}
-
-impl From<Props> for EntityProps {
-    fn from(props: Props) -> EntityProps {
-        EntityProps(props)
-    }
-}
-
-impl From<EntityProps> for Props {
-    fn from(props: EntityProps) -> Props {
-        props.0
-    }
-}
-
 /// [`Props`] stored world-wide, as a resource.
 ///
-/// See [`EntityProps`] for the entity-scoped equivalent.
+/// Bevy requires components and resources to be distinct types (as of bevy
+/// `v0.19`, `Resource` implies `Component`), so this wraps [`Props`] rather
+/// than using it directly. It dereferences to [`Props`], and is usually
+/// accessed through the extension traits [`PropsExt`], [`PropsMutExt`], and
+/// [`PropCommandsExt`] rather than directly.
 ///
 /// ```rust
 /// # use bevy_ecs::prelude::*;

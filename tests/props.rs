@@ -6,8 +6,7 @@ use bevy_mod_props::prelude::*;
 /// Entity props and global props must not interfere with each other. As of
 /// bevy 0.19 resources are components on singleton entities, so a single type
 /// used as both a resource and a component would despawn other holders on
-/// every insert. `EntityProps` and `GlobalProps` exist to prevent exactly
-/// that.
+/// every insert. The `GlobalProps` wrapper exists to prevent exactly that.
 #[test]
 fn entity_and_global_props_are_independent() {
     let mut world = World::new();
@@ -25,10 +24,10 @@ fn entity_and_global_props_are_independent() {
 fn props_are_readable_through_queries() {
     let mut world = World::new();
 
-    world.spawn(EntityProps(Props::new().with("health", 100.0)));
+    world.spawn(Props::new().with("health", 100.0));
     world.insert_resource(GlobalProps(Props::new().with("difficulty", 2.0)));
 
-    let entity_props = world.query::<&EntityProps>().single(&world).unwrap();
+    let entity_props = world.query::<&Props>().single(&world).unwrap();
     assert_eq!(entity_props["health"], 100.0);
 
     let global_props = world.resource::<GlobalProps>();

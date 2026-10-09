@@ -35,7 +35,7 @@ fn props_accept_expressions() {
     let world = app.world_mut();
     let entity = world
         .spawn_scene(bsn! {
-            template_value(Props::new().with("health", 100.0).with("name", "frodo"))
+            Props::new().with("health", 100.0).with("name", "frodo")
         })
         .unwrap()
         .id();
@@ -50,9 +50,9 @@ fn props_work_in_scene_hierarchies() {
     let world = app.world_mut();
     let root = world
         .spawn_scene(bsn! {
-            template_value(Props::new().with("depth", 0.0))
+            Props::new().with("depth", 0.0)
             Children [
-                template_value(Props::new().with("depth", 1.0))
+                Props::new().with("depth", 1.0)
             ]
         })
         .unwrap()
@@ -68,15 +68,15 @@ fn props_work_in_scene_hierarchies() {
 #[test]
 fn composed_scenes_replace_props_wholesale() {
     fn base() -> impl Scene {
-        bsn! { template_value(Props::new().with("health", 100.0)) }
+        bsn! { Props::new().with("health", 100.0) }
     }
 
     let mut app = test_app();
     let world = app.world_mut();
     let entity = world
         .spawn_scene(bsn! {
-            base()
-            template_value(Props::new().with("mana", 50.0))
+            @base()
+            Props::new().with("mana", 50.0)
         })
         .unwrap()
         .id();

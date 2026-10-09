@@ -82,7 +82,7 @@ pub trait RegistryLookupExt {
 }
 
 pub struct EntityClassIter<'w> {
-    entities: bevy_ecs::entity::hash_set::IntoIter,
+    entities: bevy_ecs::entity::hash_set::IntoIter<Entity>,
     world: &'w World,
 }
 
@@ -177,7 +177,7 @@ pub trait RegistryLookupMutExt {
 }
 
 pub struct EntityClassMutIter<'w> {
-    entities: bevy_ecs::entity::hash_set::IntoIter,
+    entities: bevy_ecs::entity::hash_set::IntoIter<Entity>,
     world_cell: UnsafeWorldCell<'w>,
 }
 
@@ -241,7 +241,7 @@ impl<'w> RegistryLookupDeferredExt for DeferredWorld<'w> {
 }
 
 pub struct EntityClassDeferredIter<'w> {
-    entities: bevy_ecs::entity::hash_set::IntoIter,
+    entities: bevy_ecs::entity::hash_set::IntoIter<Entity>,
     world_cell: UnsafeWorldCell<'w>,
 }
 
